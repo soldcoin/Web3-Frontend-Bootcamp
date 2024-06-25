@@ -1,10 +1,15 @@
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-import Header from "./components/Header";
 import { config } from "./wagmi.config";
 
+import {
+  ChakraProvider,
+  extendTheme,
+} from '@chakra-ui/react'
+import Header from "./components/Header";
+import NFTMarketplace from "./Marketplace";
 
+const theme = extendTheme({})
 
 
 export default function App() {
@@ -12,8 +17,12 @@ export default function App() {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <Header />
-        <div>hello world</div>
+        <ChakraProvider theme={theme}>
+          <>
+            <Header />
+            <NFTMarketplace />
+          </>
+        </ChakraProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )
