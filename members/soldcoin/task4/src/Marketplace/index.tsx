@@ -1,44 +1,88 @@
-import { SimpleGrid, useDisclosure } from "@chakra-ui/react";
+import { SimpleGrid } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import NFTCard from "./NFTCard";
-import BuyNFTModal from "./BuyNFTModal";
-import { useState } from "react";
-
-interface NFTItem {
-  id: number;
-  image: string;
-  contractAddress: string;
-  tokenId: string;
-  price: string;
-  sellerAddress: string;
-}
+import createEthersProvider from "../hooks/useEthersProvider";
 
 export default function Marketplace() {
-  const { isOpen: isBuyNFTModalOpen, onOpen: onOpenBuyNFTModal, onClose: onCloseBuyNFTModal } = useDisclosure();
+  const [NFTList, setNFTList] = useState<NFTItem[]>([]);
 
-  const [nft, setNft] = useState<NFTItem>();
+  const { contract } = createEthersProvider();
 
-  const nfts = [
-    { id: 1, image: "https://picsum.photos/200/300", contractAddress: "0x1234567890abcdef", tokenId: "1", price: "0.5", sellerAddress: "0xabcdef1234567890" },
-    { id: 2, image: "https://picsum.photos/200/300", contractAddress: "0x2345678901bcdef0", tokenId: "2", price: "0.7", sellerAddress: "0xbcdef01234567891" },
-    { id: 3, image: "https://picsum.photos/200/300", contractAddress: "0x3456789012cdef01", tokenId: "3", price: "0.3", sellerAddress: "0xcdef012345678912" },
-  ];
+  // const result = useInfiniteReadContracts({
+  //   cacheKey: 'compose-listings',
+  //   contracts(pageParam) {
+  //     console.log('🦊 pageParam 🦊', pageParam)
+  //     return [{
+  //       address: deployedAddreses.MARKET as `0x${string}`,
+  //       abi: marketplaceABI,
+  //       functionName: 'listings',
+  //       args: [pageParam],
+  //     }]
+  //   },
+  //   query: {
+  //     refetchInterval: 3000,
+  //     initialPageParam: 0,
+  //     getNextPageParam(_lastPage, _allPages, lastPageParam) {
+  //       console.log('🦊  🦊', _lastPage, _allPages, lastPageParam)
+  //       return lastPageParam + 1;
+  //     },
+  //   }
+  // })
+  // console.log('🦊 infinite listings 🦊', result.data)
+
+
+  const getListings = async () => {
+    const listings = [];
+
+    const fetchListing = async (index: number) => {
+      try {
+        const listing = await contract.listings(index);
+        return {
+          id: index,
+          seller: listing.seller,
+          nftContract: listing.nftContract,
+          tokenId: listing.tokenId.toString(),
+          // price: ethers.formatEther(listing.price)
+          price: listing.price
+        };
+      } catch (error) {
+        console.error('🦊 fetchListing 🦊', error);
+        return null;
+      }
+    };
+
+    for (let i = 0; ; i++) {
+      const listing = await fetchListing(i);
+      if (listing === null) break;
+      listings.push(listing);
+    }
+
+    return listings;
+  };
+
+  const fetchNFTs = async () => {
+    try {
+      const listings = await getListings();
+      setNFTList(() => listings);
+    } catch (error) {
+      console.error('Error fetching NFTs:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNFTs();
+  }, []);
 
   return (
     <>
       <SimpleGrid columns={[1, 2, 3]} spacing={6} p={6}>
-        {nfts.map((nft) => (
+        {NFTList.map((nft) => (
           <NFTCard
-            key={nft.id}
+            key={nft.tokenId}
             {...nft}
-            onBuy={() => {
-              setNft(nft);
-              onOpenBuyNFTModal()
-            }}
           />
         ))}
       </SimpleGrid>
-
-      <BuyNFTModal nft={nft} isOpen={isBuyNFTModalOpen} onClose={onCloseBuyNFTModal} />
     </>
   )
 }

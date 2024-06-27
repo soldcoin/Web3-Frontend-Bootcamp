@@ -22,10 +22,10 @@ const Header = () => {
           {account.isConnected ? (
             <Menu>
               <MenuButton as={Button} colorScheme="green">
-                {shortenAddress(account.address)}
+                {shortenAddress(account.address as string)}
               </MenuButton>
               <MenuList>
-                <MenuItem onClick={() => disconnect()}>Disconnect</MenuItem>
+                <MenuItem onClick={() => disconnect()} color="gray.500">Disconnect</MenuItem>
               </MenuList>
             </Menu>
           ) : (

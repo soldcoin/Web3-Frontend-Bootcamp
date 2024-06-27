@@ -1,10 +1,15 @@
-import { http, createConfig } from 'wagmi'
-import { mainnet, sepolia } from 'wagmi/chains'
+import { createConfig, http, type Config } from 'wagmi'
+import { sepolia } from 'wagmi/chains'
+import { metaMask } from 'wagmi/connectors'
 
-export const config = createConfig({
-  chains: [mainnet, sepolia],
+export const config: Config = createConfig({
+  chains: [sepolia],
+  connectors: [
+    metaMask({
+      // infuraAPIKey: import.meta.env.VITE_INFURA_API_KEY,
+    })
+  ],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [sepolia.id]: http(`https://sepolia.infura.io/v3/${import.meta.env.VITE_INFURA_API_KEY}`),
   },
 })
